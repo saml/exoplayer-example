@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">ExoPlayer Example</string>
+    <string name="app_name">ExoPlayer HLS Example</string>
+    <string name="media_url_hls">http://192.168.0.134:8080/output.m3u8</string>
 </resources>
