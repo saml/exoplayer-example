@@ -2,6 +2,7 @@ package saml.exoplayerexample;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.TextView;
@@ -22,8 +23,10 @@ public class PlayerActivity extends AppCompatActivity {
 
     private PlayerView playerView;
     private TextView debugTextView;
+    private TextView customTextView;
     private DebugTextViewHelper debugTextViewHelper;
     private SimpleExoPlayer player;
+    private CurrentTimeReporter currentTimeReporter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +34,13 @@ public class PlayerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_player);
 
         debugTextView = findViewById(R.id.debug_text_view);
-        debugTextView.append("\n");
-        debugTextView.setMovementMethod(ScrollingMovementMethod.getInstance());
         debugTextView.setVisibility(View.VISIBLE);
+
+        customTextView = findViewById(R.id.custom_text_view);
+        customTextView.append("\n");
+        customTextView.setMovementMethod(ScrollingMovementMethod.getInstance());
+        customTextView.setVisibility(View.VISIBLE);
+
         playerView = findViewById(R.id.video_view);
     }
 
@@ -77,10 +84,17 @@ public class PlayerActivity extends AppCompatActivity {
             player = new SimpleExoPlayer.Builder(this).setTrackSelector(trackSelector).build();
             player.addAnalyticsListener(new EventLogger(trackSelector));
             player.setPlayWhenReady(true);
-            player.addMetadataOutput(new TimedMetadataHandler(debugTextView));
-            player.addAnalyticsListener(new AnalyticsHandler(debugTextView, player));
+            player.addMetadataOutput(new TimedMetadataHandler(customTextView));
+            player.addAnalyticsListener(new AnalyticsHandler(customTextView, player));
 
-            playerView.setPlayer(player);;
+            currentTimeReporter = new CurrentTimeReporter(customTextView, player, new Handler(), 4000);
+            currentTimeReporter.start();
+
+            debugTextViewHelper = new DebugTextViewHelper(player, debugTextView);
+            debugTextViewHelper.start();
+
+            playerView.setPlayer(player);
+
         }
 
         final DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "app-name"));
@@ -94,6 +108,8 @@ public class PlayerActivity extends AppCompatActivity {
         if (player != null) {
             player.release();
             debugTextViewHelper.stop();
+            currentTimeReporter.stop();
+            currentTimeReporter = null;
             debugTextViewHelper = null;
             player = null;
         }

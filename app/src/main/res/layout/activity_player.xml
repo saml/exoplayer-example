@@ -24,9 +24,21 @@
             android:textSize="12sp"
             android:background="@android:color/background_light"
             android:textColor="@android:color/primary_text_light"
+            tools:ignore="SmallSp" />
+
+        <TextView
+            android:id="@+id/custom_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:textSize="12sp"
+            android:background="@android:color/background_light"
+            android:textColor="@android:color/primary_text_light"
             android:text="@string/media_url_hls"
             android:scrollbars="vertical"
             android:maxLines="10"
+            android:gravity="bottom"
             tools:ignore="SmallSp" />
     </LinearLayout>
 

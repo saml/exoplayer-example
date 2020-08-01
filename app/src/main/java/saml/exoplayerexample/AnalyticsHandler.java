@@ -6,6 +6,7 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.analytics.AnalyticsListener;
+import com.google.android.exoplayer2.source.MediaSourceEventListener;
 
 public class AnalyticsHandler implements AnalyticsListener {
     final private TextView textView;
@@ -18,8 +19,32 @@ public class AnalyticsHandler implements AnalyticsListener {
         this.player = player;
     }
 
-    @Override
-    public void onTimelineChanged(EventTime eventTime, int reason) {
+    //    @Override
+    public void _onLoadCompleted(
+            EventTime eventTime,
+            MediaSourceEventListener.LoadEventInfo loadEventInfo,
+            MediaSourceEventListener.MediaLoadData mediaLoadData) {
+        String metadata = "";
+        if (mediaLoadData.trackFormat != null && mediaLoadData.trackFormat.metadata != null) {
+            metadata = mediaLoadData.trackFormat.metadata.toString();
+        }
+        long start = 0;
+        long end = 0;
+        if (mediaLoadData.mediaStartTimeMs != C.TIME_UNSET) {
+            start = mediaLoadData.mediaStartTimeMs / 1000;
+            end = mediaLoadData.mediaEndTimeMs / 1000;
+        }
+        textView.append(String.format("dataType=%s trackType=%s format=%s start=%s end=%s\n",
+                mediaLoadData.dataType,
+                mediaLoadData.trackType,
+                metadata,
+                start,
+                end));
+
+    }
+
+    //    @Override
+    public void yoloonTimelineChanged(EventTime eventTime, int reason) {
         final int windowIndex = player.getCurrentWindowIndex();
         final int periodIndex = player.getCurrentPeriodIndex();
         final Timeline timeline = player.getCurrentTimeline();
@@ -40,10 +65,14 @@ public class AnalyticsHandler implements AnalyticsListener {
             duration = period.getDurationMs() / 1000;
         }
 
-        textView.append(String.format("start=%s duration=%s window=%s period=%s\n",
+        final long position = (player.getCurrentPosition() - period.getPositionInWindowMs()) / 1000;
+
+        textView.append(String.format("start=%s duration=%s position=%s window=%s period=%s reason=%s\n",
                 start,
                 duration,
+                position,
                 windowIndex,
-                periodIndex));
+                periodIndex,
+                reason));
     }
 }
