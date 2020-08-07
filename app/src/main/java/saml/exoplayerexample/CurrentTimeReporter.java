@@ -62,31 +62,32 @@ public class CurrentTimeReporter implements Runnable {
         final long periodDuration = period.getDurationMs();
         final long periodOffset = period.getPositionInWindowMs();
 
-        String position = "";
+        String wallClock = "";
         if (windowStart != C.TIME_UNSET) {
             // EXT-X-PROGRAM-DATE-TIME exists for the first segment in the manifest.
-            position = ZonedDateTime.ofInstant(Instant.ofEpochMilli(windowStart + positionInWindow), ZoneOffset.UTC).toString();
-        } else if (windowPTS != C.TIME_UNSET) {
-            // Could not come up with HLS manifest that would set presentationStartTimeMs.
-            position = "(pts)" + Duration.ofMillis(windowPTS + positionInWindow).toString();
-        } else {
-            // No start time is given for the window.
-            // But, for HLS, it looks like window is sliding while period stays still.
-            // window.getPositionInFirstPeriodMs() increases and period.getPositionInWindowMs() decreases the same amount.
-            // So, current position is just elapsed time from when the player joins the livestream.
-            position = "(elapsed)" + Duration.ofMillis(windowOffset + positionInWindow).toString();
+            wallClock = ZonedDateTime.ofInstant(Instant.ofEpochMilli(windowStart + positionInWindow), ZoneOffset.UTC).toString();
         }
 
-        if (!prevPosition.equals(position)) {
-            this.textView.append(
-                    String.format("pos=%s pdur=%s wdur=%s poff=%s woff=%s\n",
-                            position,
-                            toDurationString(periodDuration),
-                            toDurationString(windowDuration),
-                            toDurationString(periodOffset),
-                            toDurationString(windowOffset)));
+        String pts = "";
+        if (windowPTS != C.TIME_UNSET) {
+            // Could not come up with HLS manifest that would set presentationStartTimeMs.
+            pts = Duration.ofMillis(windowPTS + positionInWindow).toString();
         }
-        prevPosition = position;
+
+        // No start time is given for the window.
+        // But, for HLS, it looks like window is sliding while period stays still.
+        // window.getPositionInFirstPeriodMs() increases and period.getPositionInWindowMs() decreases the same amount.
+        // So, current position is just elapsed time from when the player joins the livestream.
+        final String elapsed = Duration.ofMillis(windowOffset + positionInWindow).toString();
+
+        if (!prevPosition.equals(elapsed)) {
+            this.textView.append(
+                    String.format("wallClock=%s pts=%s elapsed=%s\n",
+                            wallClock,
+                            pts,
+                            elapsed));
+        }
+        prevPosition = elapsed;
 
         // recurse
         this.handler.postDelayed(this, this.intervalMs);
